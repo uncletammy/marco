@@ -1,9 +1,9 @@
 # Marco
 
 
-> A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling.
+A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling.
 
-> Provides a good foundation for creating distributed job scheduling/running systems or other applications where master/slave roles need to be agreed upon by many nodes.
+Provides a good foundation for creating distributed job scheduling/running systems or other applications where master/slave roles need to be agreed upon by many nodes.
 
 
 ### Installation
