@@ -1,0 +1,39 @@
+{
+  "name": "marco",
+  "version": "0.0.1",
+  "description": "A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling. Provides a good foundation for creating distributed job scheduling/running systems or other applications where master/slave roles need to be agreed upon by many nodes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uncletammy/marco"
+  },
+  "keywords": [
+    "redis",
+    "pub",
+    "sub",
+    "pubsub",
+    "job",
+    "jobs",
+    "job",
+    "runner",
+    "scheduler",
+    "scheduling",
+    "cron",
+    "master",
+    "slave",
+    "worker",
+    "grunt"
+  ],
+  "author": "Nicholas Crumrine",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/uncletammy/marco/issues"
+  },
+  "homepage": "https://github.com/uncletammy/marco",
+  "dependencies": {
+    "redis": "^0.12.1"
+  }
+}
