@@ -112,6 +112,10 @@ Worker.prototype.determineRank = function(){
             });
         }
 
+        self.emit('attendance', {
+            connected: self.workerList
+        });
+
         self.resetAttendanceTimer();
         self.role = newRole;
         self.determiningRank = false;
