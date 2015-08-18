@@ -14,8 +14,9 @@ function Worker(options){
     this.rollCallFrequency = 10000;
     this.attendanceTimer;
     this.determiningRank = false;
-    // Process ID
-    this.workerId = process.pid;
+
+    // Unique identifier for this worker
+    this.workerId = Number(new Date().getTime());
 
     this.redisConfig = options.redis;
     this.duties = options.duties;
@@ -53,7 +54,7 @@ Worker.prototype.go = function(options){
 };
 
 Worker.prototype.speak = function(messageType,messageValue){
-    var messageValue = messageValue || 'no message';
+    messageValue = messageValue || 'no message';
     this.pub.publish(messageType, this.workerId+':'+messageValue);
     return;
 };
@@ -111,10 +112,6 @@ Worker.prototype.determineRank = function(){
                 connected: self.workerList
             });
         }
-
-        self.emit('attendance', {
-            connected: self.workerList
-        });
 
         self.resetAttendanceTimer();
         self.role = newRole;
