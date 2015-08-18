@@ -1,7 +1,7 @@
 {
   "name": "marco",
-  "version": "0.0.1",
-  "description": "A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling. Provides a good foundation for creating distributed job scheduling/running systems or other applications where master/slave roles need to be agreed upon by many nodes.",
+  "version": "0.0.2",
+  "description": "A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling. Great for distributed job runners/schedulers.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
