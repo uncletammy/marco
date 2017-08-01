@@ -1,6 +1,7 @@
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var redis = require('redis');
+var _ = require('lodash');
 
 function Worker(options){
 
@@ -21,12 +22,25 @@ function Worker(options){
     this.redisConfig = options.redis;
     this.duties = options.duties;
 
+    // Simple key/value storage that can be used to share
+    // information between multiple Marco instances.
+    this.notes = {
+
+    };
+
+    // The same key/value store described above but 
+    // shared between all Marco instances.
+    this.shared = {
+
+    };
+
     return this;
 }
 
 Worker.prototype = Object.create(EventEmitter.prototype);
 
 Worker.prototype.go = function(options){
+    var self = this;
     var redisConfig = this.redisConfig;
     // Set up Redis clients and register message events.
     this.pub = redis.createClient(redisConfig.port, redisConfig.hostname);
@@ -39,10 +53,12 @@ Worker.prototype.go = function(options){
 
     this.sub.on('message',this.handleMessage.bind(this));
 
-    var self = this;
     var registerListeners = function() {
         self.sub.subscribe('marco');
         self.sub.subscribe('polo');
+        self.sub.subscribe('share');
+        self.sub.subscribe('notes');
+
         // Asks all workers to announce their presence
         self.callMarco();
         return;
@@ -51,6 +67,76 @@ Worker.prototype.go = function(options){
     this.sub.on('ready', registerListeners);
 
     return;
+};
+
+Worker.prototype.write = function(someName,someValue){
+    delete this.notes[someName];
+    this.notes[someName] = _.isArray(someValue) ? someValue : [someValue];
+    return this.notes[someName];
+};
+
+Worker.prototype.read = function(someName){
+    return this.notes[someName] ? _.isArray(this.notes[someName]) ?  this.notes[someName] : [this.notes[someName]] : [];
+};
+
+Worker.prototype.readShared = function(someName){
+
+    var sharedNotes = {};
+    for (var key in this.shared){
+        sharedNotes[key] = this.shared[key];
+        delete this.shared[key];
+    }
+
+    return sharedNotes;
+};
+
+Worker.prototype.writeShared = function(notesObject){
+
+    for (var key in notesObject){
+
+        if (!this.shared[key]){
+            this.shared[key] = notesObject[key];
+        }
+        else {
+            for (var t in notesObject[key]){
+                if (this.shared[key].indexOf(notesObject[key][t]) === -1){
+                    this.shared[key].push(notesObject[key][t]);
+                }
+            }
+        }
+    }
+};
+
+Worker.prototype.share = function(someName){
+    var allNotes = {};
+
+    for (var key in this.notes){
+        allNotes[key] = this.notes[key];
+    }
+    this.speak('notes',JSON.stringify(allNotes));
+};
+
+Worker.prototype.getNotes = function(callback){
+    var self = this;
+
+    // Delete all shared notes before getting a fresh copy
+    for (var key in this.shared){
+        delete this.shared[key];
+    }
+
+    // Copy our notes over before asking for everyone else's
+    for (var key in this.notes){
+        this.shared[key] = _.isArray(this.notes[key]) ? this.notes[key] : [this.notes[key]];
+    }
+
+    this.speak('share');
+
+    var returnNotes = function() {
+        return callback(null, self.readShared());
+    };
+
+    setTimeout(returnNotes, 200);
+
 };
 
 Worker.prototype.speak = function(messageType,messageValue){
@@ -145,15 +231,24 @@ Worker.prototype.exitGracefully = function(error){
         this.pub.end();
     } catch (shutDownError){
         console.log('ERROR:',JSON.stringify(shutDownError,null,4));
-        // console.log('Error shutting down')
     }
 
     return process.exit(0);
 };
 
 Worker.prototype.handleMessage = function(channel, jsonMessage) {
-    var workerId = Number(jsonMessage.split(':')[0]);
-    var message = jsonMessage.split(':')[1];
+    jsonMessage = jsonMessage.split(':');
+    var workerId = Number(jsonMessage.shift());
+    var notes;
+
+    // Try to parse the message as JSON.  If we get an object
+    // then we've probably been sent some notes.
+    try {
+        var joinedMessage = jsonMessage.join(':');
+        notes = JSON.parse(joinedMessage);
+    } catch(messageParseError) {
+        // console.log('Error parsing message parameter:',messageParseError);
+    }
 
     switch (channel){
         case 'polo':
@@ -178,6 +273,25 @@ Worker.prototype.handleMessage = function(channel, jsonMessage) {
                     this.workerList.push(workerId);
                 }
             }
+        break;
+        case 'share':
+            if (this.workerId === workerId){
+                // console.log('You must have asked for notes!');
+            } else {
+                if (this.role !== 'scheduler'){
+                    this.share();
+                }
+            }
+        break;
+        case 'notes':
+            if (this.workerId === workerId){
+                // console.log('You must have sent someone your notes!');
+            } else {
+                if (this.role !== 'scheduler'){
+                    this.writeShared(notes);
+                }
+            }
+
         break;
         default:break;
     }

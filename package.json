@@ -1,6 +1,6 @@
 {
   "name": "marco",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A skinny library for establishing leadership consensus among multiple nodes in a distributed network. Uses Redis pubsub for signaling. Great for distributed job runners/schedulers.",
   "main": "index.js",
   "scripts": {
@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/uncletammy/marco",
   "dependencies": {
+    "lodash": "^4.17.4",
     "redis": "^0.12.1"
   }
 }
